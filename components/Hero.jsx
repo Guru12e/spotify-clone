@@ -592,108 +592,124 @@ const Hero = () => {
         <audio ref={audioRef} />
       </div>
       {isSongOpen && isCurrentSong && (
-        <div className="fixed w-screen h-screen bottom-0 left-0 right-0 bg-[#181818] p-4 md:p-6 z-20">
+        <div className="fixed w-screen h-screen bottom-0 flex flex-col justify-end left-0 right-0 bg-[#181818] p-4 md:p-6 z-20">
           <ChevronDown
-            size={24}
-            className="text-white cursor-pointer mb-4"
+            size={35}
+            className="text-white cursor-pointer mb-5 bg-white/40 rounded-full p-1"
             onClick={() => setIsSongOpen(false)}
           />
 
-          <div className="flex mt-20 flex-col items-center space-x-4">
-            <div className="w-[35vw] aspect-square relative rounded-lg overflow-hidden">
-              <Image
-                src={`/covers/${isCurrentSong.title}.${isCurrentSong.type}`}
-                alt={isCurrentSong.title}
-                fill
-              />
-            </div>
-            <div className="text-center mt-4">
-              <p className="text-lg font-semibold">{isCurrentSong.title}</p>
-              <p className="text-md text-gray-400">{isCurrentSong.artist}</p>
-              <p className="text-sm text-gray-500">
-                {isCurrentSong.album} - {isCurrentSong.release_date}
-              </p>
-            </div>
-            <div className="w-[70vw] mx-auto flex items-center mt-12">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={(currentTime / duration) * 100 || 0}
-                onChange={handleProgressChange}
-                className="flex-1 h-1 bg-gray-600 rounded-full appearance-none caret-white cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, white ${
-                    (currentTime / duration) * 100
-                  }%, #4b5563 ${(currentTime / duration) * 100}%)`,
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between w-[70vw] mt-6">
-              <span className="text-xs text-gray-400 mr-1 md:mr-2">
-                {formatTime(currentTime)}
-              </span>
-              <span className="text-xs text-gray-400 ml-1 md:ml-2">
-                {formatTime(duration)}
-              </span>
-            </div>
-            <div className="flex flex-1 justify-center h-full flex-col mt-6 items-center w-full md:w-1/2">
-              <div className="w-[70vw] items-center flex justify-between space-x-4">
-                <div className="flex-1"></div>
-                <div className="flex flex-1 items-center space-x-4">
-                  <button
-                    onClick={playPreviousSong}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <SkipBack size={25} fill="white" className="border-white" />
-                  </button>
-                  <button
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    className="bg-white text-black rounded-full p-1 md:p-2"
-                  >
-                    {isPlaying ? (
-                      <Pause size={25} fill="black" className="md:w-6 md:h-6" />
-                    ) : (
-                      <Play size={25} fill="black" className="md:w-6 md:h-6" />
-                    )}
-                  </button>
-                  <button
-                    onClick={playNextSong}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <SkipForwardIcon
+          <div className="flex flex-col justify-center h-max">
+            <div className="flex flex-col items-center space-x-4">
+              <div className="w-[35vw] mx-auto aspect-square relative rounded-lg overflow-hidden">
+                <Image
+                  src={`/covers/${isCurrentSong.title}.${isCurrentSong.type}`}
+                  alt={isCurrentSong.title}
+                  fill
+                />
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-lg font-semibold">{isCurrentSong.title}</p>
+                <p className="text-md text-gray-400">{isCurrentSong.artist}</p>
+                <p className="text-sm text-gray-500">
+                  {isCurrentSong.album} - {isCurrentSong.release_date}
+                </p>
+              </div>
+              <div className="w-[70vw] mx-auto flex items-center mt-12">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={(currentTime / duration) * 100 || 0}
+                  onChange={handleProgressChange}
+                  className="flex-1 h-1 bg-gray-600 rounded-full appearance-none caret-white cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, white ${
+                      (currentTime / duration) * 100
+                    }%, #4b5563 ${(currentTime / duration) * 100}%)`,
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between w-[70vw] mt-6">
+                <span className="text-xs text-gray-400 mr-1 md:mr-2">
+                  {formatTime(currentTime)}
+                </span>
+                <span className="text-xs text-gray-400 ml-1 md:ml-2">
+                  {formatTime(duration)}
+                </span>
+              </div>
+              <div className="flex justify-center flex-col mt-6 items-center w-full md:w-1/2">
+                <div className="w-[70vw] items-center flex justify-between space-x-4">
+                  <div className="flex-1"></div>
+                  <div className="flex flex-1 items-center space-x-4">
+                    <button
+                      onClick={playPreviousSong}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <SkipBack
+                        size={25}
+                        fill="white"
+                        className="border-white"
+                      />
+                    </button>
+                    <button
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      className="bg-white text-black rounded-full p-1 md:p-2"
+                    >
+                      {isPlaying ? (
+                        <Pause
+                          size={25}
+                          fill="black"
+                          className="md:w-6 md:h-6"
+                        />
+                      ) : (
+                        <Play
+                          size={25}
+                          fill="black"
+                          className="md:w-6 md:h-6"
+                        />
+                      )}
+                    </button>
+                    <button
+                      onClick={playNextSong}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <SkipForwardIcon
+                        size={25}
+                        fill="white"
+                        className="border-white"
+                      />
+                    </button>
+                  </div>
+                  <div className="flex-1 flex justify-end w-full">
+                    <Heart
                       size={25}
-                      fill="white"
-                      className="border-white"
-                    />
-                  </button>
-                </div>
-                <div className="flex-1 flex justify-end w-full">
-                  <Heart
-                    size={25}
-                    className="text-gray-400 hover:text-white"
-                    fill={
-                      likedSongs.includes(isCurrentSong.title) ? "red" : "none"
-                    }
-                    onClick={() => {
-                      let updatedLikedSongs;
-                      if (likedSongs.includes(isCurrentSong.title)) {
-                        updatedLikedSongs = likedSongs.filter(
-                          (song) => song !== isCurrentSong.title
-                        );
-                      } else {
-                        updatedLikedSongs = [
-                          ...likedSongs,
-                          isCurrentSong.title,
-                        ];
+                      className="text-gray-400 hover:text-white"
+                      fill={
+                        likedSongs.includes(isCurrentSong.title)
+                          ? "red"
+                          : "none"
                       }
-                      setLikedSongs(updatedLikedSongs);
-                      localStorage.setItem(
-                        "likedSongs",
-                        JSON.stringify(updatedLikedSongs)
-                      );
-                    }}
-                  />
+                      onClick={() => {
+                        let updatedLikedSongs;
+                        if (likedSongs.includes(isCurrentSong.title)) {
+                          updatedLikedSongs = likedSongs.filter(
+                            (song) => song !== isCurrentSong.title
+                          );
+                        } else {
+                          updatedLikedSongs = [
+                            ...likedSongs,
+                            isCurrentSong.title,
+                          ];
+                        }
+                        setLikedSongs(updatedLikedSongs);
+                        localStorage.setItem(
+                          "likedSongs",
+                          JSON.stringify(updatedLikedSongs)
+                        );
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
