@@ -80,6 +80,9 @@ const Hero = () => {
   }, [isCurrentSong]);
 
   const handlePlaySong = (song) => {
+    if (!session.user.email) {
+      signIn();
+    }
     if (audioRef.current) {
       const songPath = `/songs/${song.title}.mp3`;
       setIsCurrentSong(song);
