@@ -192,11 +192,11 @@ const Hero = () => {
           <div className="flex-1 flex items-center gap-2 md:gap-4 justify-center w-full">
             <Link
               href="/"
-              className="text-white bg-[#1a1a1a]/80 p-2 md:p-3 rounded-full hover:text-white font-semibold"
+              className="text-white hidden md:block bg-[#1a1a1a]/80 p-2 md:p-3 rounded-full hover:text-white font-semibold"
             >
               <Home size={20} className="md:w-6 md:h-6" />
             </Link>
-            <div className="relative w-full max-w-[20rem] md:max-w-[24rem]">
+            <div className="relative w-full md:max-w-[24rem]">
               <input
                 type="text"
                 ref={searchInputRef}
@@ -256,7 +256,7 @@ const Hero = () => {
             </div>
           </div>
           <div className="flex items-center space-x-2 md:space-x-4">
-            <button className="bg-black/50 rounded-full px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-semibold">
+            <button className="bg-black/50 hidden md:block rounded-full px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-semibold">
               Upgrade
             </button>
             {session ? (
@@ -637,7 +637,7 @@ const Hero = () => {
                 {formatTime(duration)}
               </span>
             </div>
-            <div className="flex flex-col mt-6 items-center w-full md:w-1/2">
+            <div className="flex flex-1 justify-center h-full flex-col mt-6 items-center w-full md:w-1/2">
               <div className="w-[70vw] items-center flex justify-between space-x-4">
                 <div className="flex-1"></div>
                 <div className="flex flex-1 items-center space-x-4">
@@ -697,7 +697,7 @@ const Hero = () => {
                 </div>
               </div>
             </div>
-            <div className="w-full mt-8 p-4 bg-[#282828] rounded-lg">
+            <div className="w-full h-max mt-8 p-4 bg-[#282828] rounded-lg">
               <h1 className="text-white text-lg font-bold mb-4">Up Next</h1>
               <div className="space-y-2 overflow-y-auto h-[120px] no-scrollbar">
                 {songQueue.length > 0 ? (
