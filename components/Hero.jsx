@@ -11,6 +11,11 @@ import {
   Volume2,
   VolumeX,
   List,
+  ChevronDown,
+  SkipBack,
+  SkipForwardIcon,
+  Repeat,
+  Repeat1,
 } from "lucide-react";
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
@@ -22,6 +27,7 @@ const Hero = () => {
   const searchInputRef = useRef(null);
   const audioRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSongOpen, setIsSongOpen] = useState(false);
   const { data: session } = useSession();
   const [isCurrentSong, setIsCurrentSong] = useState(null);
   const [likedSongs, setLikedSongs] = useState([]);
@@ -29,6 +35,7 @@ const Hero = () => {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [songQueue, setSongQueue] = useState([]);
+  const [playedSongs, setPlayedSongs] = useState([]);
   const [showQueue, setShowQueue] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const songs = [...trendingNew, ...madeForYou, ...englishSongs];
@@ -76,16 +83,18 @@ const Hero = () => {
     if (audioRef.current) {
       const songPath = `/songs/${song.title}.mp3`;
       setIsCurrentSong(song);
-      const songIndex = songs.indexOf(song);
-      let updatedQueue;
+      setPlayedSongs((prev) => [...prev, song]);
+
+      const songIndex = songs.findIndex((s) => s.title === song.title);
+      let updatedQueue = [...songs];
       if (songIndex !== -1) {
-        updatedQueue = songs
-          .slice(songIndex + 1)
-          .concat(songs.slice(0, songIndex));
-      } else {
-        updatedQueue = [...songs];
+        updatedQueue = [
+          ...songs.slice(songIndex + 1),
+          ...songs.slice(0, songIndex),
+        ];
       }
       setSongQueue(updatedQueue);
+
       audioRef.current.src = songPath;
       audioRef.current.play();
       setIsPlaying(true);
@@ -93,15 +102,35 @@ const Hero = () => {
   };
 
   const playNextSong = () => {
-    if (songQueue.length > 1) {
+    if (isCurrentSong) {
+      handlePlaySong(isCurrentSong);
+      return;
+    }
+
+    if (songQueue.length > 0) {
       const nextSong = songQueue[0];
       setSongQueue((prev) => prev.slice(1));
+      setPlayedSongs((prev) => [...prev, nextSong]);
       handlePlaySong(nextSong);
     } else {
       setIsPlaying(false);
       setIsCurrentSong(null);
       setSongQueue([]);
     }
+  };
+
+  const playPreviousSong = () => {
+    if (!isCurrentSong) return;
+
+    const currentIndex = songs.findIndex(
+      (s) => s.title === isCurrentSong.title
+    );
+    const previousIndex = (currentIndex - 1 + songs.length) % songs.length;
+    const previousSong = songs[previousIndex];
+
+    setPlayedSongs((prev) => [...prev, isCurrentSong]);
+    setSongQueue((prev) => [isCurrentSong, ...prev]);
+    handlePlaySong(previousSong);
   };
 
   const formatTime = (seconds) => {
@@ -147,11 +176,11 @@ const Hero = () => {
   };
 
   return (
-    <div className="h-screen bg-[#0f0e0e] text-white flex flex-col">
+    <div className="h-screen relative bg-[#0f0e0e] text-white flex flex-col">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="backdrop-blur-sm flex items-center gap-5 px-4 py-2 sticky top-0 z-10">
-          <div className="flex items-center gap-8">
-            <div className="w-10 aspect-square relative">
+        <header className="backdrop-blur-sm flex items-center gap-3 px-4 py-2 sticky top-0 z-10 flex-wrap md:flex-nowrap">
+          <div className="flex items-center gap-4 md:gap-8">
+            <div className="w-8 md:w-10 aspect-square relative">
               <Image
                 src="/images/logo.png"
                 alt="Spotify"
@@ -160,61 +189,64 @@ const Hero = () => {
               />
             </div>
           </div>
-          <div className="flex-1 flex items-center gap-4 justify-center w-full">
+          <div className="flex-1 flex items-center gap-2 md:gap-4 justify-center w-full">
             <Link
               href="/"
-              className="text-white bg-[#1a1a1a]/80 p-3 rounded-full hover:text-white font-semibold"
+              className="text-white bg-[#1a1a1a]/80 p-2 md:p-3 rounded-full hover:text-white font-semibold"
             >
-              <Home size={24} />
+              <Home size={20} className="md:w-6 md:h-6" />
             </Link>
-            <div className="relative w-96">
+            <div className="relative w-full max-w-[20rem] md:max-w-[24rem]">
               <input
                 type="text"
                 ref={searchInputRef}
                 placeholder="What do you want to play?"
-                className="bg-[#1a1a1a]/80 text-white rounded-full px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-white pl-10"
+                className="bg-[#1a1a1a]/80 text-white rounded-full px-3 py-2 md:px-4 md:py-3 w-full focus:outline-none focus:ring-2 focus:ring-white pl-8 md:pl-10 text-sm md:text-base"
                 onChange={handleSearchChange}
                 value={searchQuery}
               />
               <Search
-                size={20}
+                size={16}
                 onClick={() => searchInputRef.current?.focus()}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
               />
               {searchQuery && (
                 <button
                   onClick={clearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
                   <svg
-                    width="16"
-                    height="16"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="currentColor"
+                    className="md:w-4 md:h-4"
                   >
                     <path d="M12 10.586l4.95-4.95a1 1 0 1 1 1.414 1.414L13.414 12l4.95 4.95a1 1 0 0 1-1.414 1.414L12 13.414l-4.95 4.95a1 1 0 0 1-1.414-1.414L10.586 12 5.636 7.05a1 1 0 0 1 1.414-1.414L12 10.586z" />
                   </svg>
                 </button>
               )}
               {filteredSongs.length > 0 && (
-                <div className="absolute left-0 top-full mt-2 w-full bg-[#181818] rounded-lg shadow-lg max-h-60 overflow-y-auto no-scrollbar">
+                <div className="absolute left-0 top-full mt-2 w-full bg-[#181818] rounded-lg shadow-lg max-h-48 md:max-h-60 overflow-y-auto no-scrollbar">
                   {filteredSongs.map((song, index) => (
                     <div
                       key={index}
                       onClick={() => handlePlaySong(song)}
-                      className="px-4 py-2 hover:bg-[#282828] cursor-pointer flex items-center gap-4"
+                      className="px-3 py-1 md:px-4 md:py-2 hover:bg-[#282828] cursor-pointer flex items-center gap-2 md:gap-4"
                     >
-                      <div className="w-10 h-10 relative">
+                      <div className="w-8 h-8 md:w-10 md:h-10 relative">
                         <Image
                           src={`/covers/${song.title}.jpg`}
                           alt={song.title}
                           fill
                           className="object-cover rounded-full"
-                          sizes="40px"
+                          sizes="(max-width: 768px) 32px, 40px"
                         />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold">{song.title}</p>
+                        <p className="text-xs md:text-sm font-semibold">
+                          {song.title}
+                        </p>
                         <p className="text-xs text-gray-400">{song.artist}</p>
                       </div>
                     </div>
@@ -223,15 +255,15 @@ const Hero = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <button className="bg-black/50 rounded-full px-4 py-2 text-sm font-semibold">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <button className="bg-black/50 rounded-full px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-semibold">
               Upgrade
             </button>
             {session ? (
               <div className="relative">
                 <div
                   onClick={() => setIsOpen(!isOpen)}
-                  className="rounded-full bg-gray-800 w-10 h-10 relative flex items-center justify-center text-white font-semibold cursor-pointer"
+                  className="rounded-full bg-gray-800 w-8 h-8 md:w-10 md:h-10 relative flex items-center justify-center text-white font-semibold cursor-pointer"
                 >
                   <Image
                     src={session.user.image || "/images/default-avatar.png"}
@@ -241,10 +273,10 @@ const Hero = () => {
                   />
                 </div>
                 {isOpen && (
-                  <div className="absolute right-0 mt-2 w-max bg-[#181818] text-black rounded-lg shadow-lg">
+                  <div className="absolute right-0 mt-2 w-32 md:w-max bg-[#181818] text-black rounded-lg shadow-lg">
                     <button
                       onClick={() => signOut()}
-                      className="block w-full text-left p-4 px-6 cursor-pointer text-md text-gray-400 hover:text-white"
+                      className="block w-full text-left p-2 md:p-4 px-4 md:px-6 cursor-pointer text-xs md:text-md text-gray-400 hover:text-white"
                     >
                       Sign out
                     </button>
@@ -253,7 +285,7 @@ const Hero = () => {
               </div>
             ) : (
               <button
-                className="bg-black/50 rounded-full px-4 py-2 text-sm font-semibold"
+                className="bg-black/50 rounded-full px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-semibold"
                 onClick={() => signIn()}
               >
                 Sign in
@@ -262,10 +294,12 @@ const Hero = () => {
           </div>
         </header>
 
-        <main className="flex-1 mt-2 flex overflow-x-auto no-scrollbar">
-          <div className="h-full w-1/5 bg-[#040404] flex flex-col">
-            <div className="flex justify-between items-center px-6 py-2">
-              <h2 className="text-md font-semibold">Your Favorites</h2>
+        <main className="flex-1 mt-2 flex flex-col md:flex-row overflow-x-auto no-scrollbar">
+          <div className="h-auto md:h-full w-full py-5 md:w-1/5 bg-[#040404] flex flex-col">
+            <div className="flex justify-between items-center px-4 md:px-6 py-2">
+              <h2 className="text-sm md:text-md font-semibold">
+                Your Favorites
+              </h2>
             </div>
             {likedSongs.length > 0 ? (
               <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -275,19 +309,19 @@ const Hero = () => {
                     onClick={() =>
                       handlePlaySong(songs.find((s) => s.title === song))
                     }
-                    className="px-6 py-2 hover:bg-[#181818] cursor-pointer flex items-center gap-4"
+                    className="px-4 md:px-6 py-1 md:py-2 hover:bg-[#181818] cursor-pointer flex items-center gap-2 md:gap-4"
                   >
-                    <div className="w-10 h-10 relative">
+                    <div className="w-8 h-8 md:w-10 md:h-10 relative">
                       <Image
                         src={`/covers/${song}.jpg`}
                         alt={song}
                         fill
                         className="object-cover rounded-full"
-                        sizes="40px"
+                        sizes="(max-width: 768px) 32px, 40px"
                       />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold">{song}</p>
+                      <p className="text-xs md:text-sm font-semibold">{song}</p>
                       <p className="text-xs text-gray-400">
                         {songs
                           .filter((s) => s.title === song)
@@ -296,9 +330,9 @@ const Hero = () => {
                       </p>
                     </div>
                     <Heart
-                      size={20}
+                      size={16}
+                      className="md:w-5 md:h-5 text-gray-400 hover:text-white"
                       fill={likedSongs.includes(song) ? "red" : "none"}
-                      className="text-gray-400 hover:text-white"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (likedSongs.includes(song)) {
@@ -317,11 +351,11 @@ const Hero = () => {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-400">No favorite songs found</p>
+                <p className="text-gray-400 text-sm">No favorite songs found</p>
               </div>
             )}
           </div>
-          <div className="p-6 w-4/5 rounded-xl bg-gradient-to-b from-[#2a2a2a] to-[#121212]">
+          <div className="p-4 md:p-6 w-full md:w-4/5 rounded-xl bg-gradient-to-b from-[#2a2a2a] to-[#121212]">
             <SongsCategory
               title="Trending Now"
               songs={trendingNew}
@@ -340,29 +374,97 @@ const Hero = () => {
           </div>
         </main>
 
-        <footer className="bg-[#181818] border-t border-gray-800 p-4 flex items-center justify-between relative">
-          <div className="flex items-center space-x-4">
+        <footer className="bg-[#181818] border-t border-gray-800 p-2 md:p-4 flex flex-col md:flex-row items-center justify-between relative">
+          <div className="flex md:hidden items-center py-2 w-full px-2 space-x-2 md:space-x-4 mb-2 md:mb-0">
+            {isCurrentSong && !isSongOpen && (
+              <div
+                onClick={() => setIsSongOpen(!isSongOpen)}
+                className="flex w-full justify-between cursor-pointer"
+              >
+                <div className="flex items-center space-x-2">
+                  <Image
+                    src={`/covers/${isCurrentSong.title}.${isCurrentSong.type}`}
+                    alt="Now Playing"
+                    width={40}
+                    height={40}
+                    className="rounded md:w-14 md:h-14"
+                  />
+                  <div>
+                    <p className="font-semibold text-sm md:text-base">
+                      {isCurrentSong.title}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {isCurrentSong.album}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Heart
+                    size={20}
+                    className="md:w-5 md:h-5 text-white"
+                    fill={
+                      likedSongs.includes(isCurrentSong.title) ? "red" : "none"
+                    }
+                    onClick={() => {
+                      let updatedLikedSongs;
+                      if (likedSongs.includes(isCurrentSong.title)) {
+                        updatedLikedSongs = likedSongs.filter(
+                          (song) => song !== isCurrentSong.title
+                        );
+                      } else {
+                        updatedLikedSongs = [
+                          ...likedSongs,
+                          isCurrentSong.title,
+                        ];
+                      }
+                      setLikedSongs(updatedLikedSongs);
+                      localStorage.setItem(
+                        "likedSongs",
+                        JSON.stringify(updatedLikedSongs)
+                      );
+                    }}
+                  />
+                  <button
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="text-white rounded-full p-1 md:p-2"
+                  >
+                    {isPlaying ? (
+                      <Pause size={20} className="md:w-6 md:h-6" />
+                    ) : (
+                      <Play size={20} className="md:w-6 md:h-6" />
+                    )}
+                  </button>
+                  <button onClick={playNextSong} className="text-white">
+                    <SkipForwardIcon size={20} className="md:w-6 md:h-6" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="hidden md:flex items-center space-x-2 md:space-x-4 mb-2 md:mb-0">
             {isCurrentSong && (
               <>
                 <Image
                   src={`/covers/${isCurrentSong.title}.${isCurrentSong.type}`}
                   alt="Now Playing"
-                  width={56}
-                  height={56}
-                  className="rounded"
+                  width={40}
+                  height={40}
+                  className="rounded md:w-14 md:h-14"
                 />
                 <div>
-                  <p className="font-semibold">{isCurrentSong.title}</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="font-semibold text-sm md:text-base">
+                    {isCurrentSong.title}
+                  </p>
+                  <p className="text-xs text-gray-400">
                     {isCurrentSong.artist}
                   </p>
                 </div>
                 <Heart
-                  size={20}
+                  size={16}
+                  className="md:w-5 md:h-5 text-gray-400 hover:text-white"
                   fill={
                     likedSongs.includes(isCurrentSong.title) ? "red" : "none"
                   }
-                  className="text-gray-400 hover:text-white"
                   onClick={() => {
                     let updatedLikedSongs;
                     if (likedSongs.includes(isCurrentSong.title)) {
@@ -383,40 +485,33 @@ const Hero = () => {
             )}
           </div>
 
-          <div className="flex flex-col items-center w-1/2">
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-400 hover:text-white">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                >
-                  <path d="M3.3 1a.7.7 0 0 1 .7.7v5.15l9.95-5.744a.7.7 0 0 1 1.05.606v12.575a.7.7 0 0 1-1.05.607L4 9.149V14.3a.7.7 0 0 1-.7.7H1.7a.7.7 0 0 1-.7-.7V1.7a.7.7 0 0 1 .7-.7h1.6z"></path>
-                </svg>
+          <div className="hidden md:flex flex-col items-center w-full md:w-1/2">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <button
+                onClick={playPreviousSong}
+                className="text-gray-400 hover:text-white"
+              >
+                <SkipBack size={20} className="md:w-6 md:h-6" />
               </button>
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="bg-white text-black rounded-full p-2"
+                className="bg-white text-black rounded-full p-1 md:p-2"
               >
-                {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                {isPlaying ? (
+                  <Pause size={20} className="md:w-6 md:h-6" />
+                ) : (
+                  <Play size={20} className="md:w-6 md:h-6" />
+                )}
               </button>
               <button
                 onClick={playNextSong}
                 className="text-gray-400 hover:text-white"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                >
-                  <path d="M12.7 1a.7.7 0 0 0-.7.7v5.15L2.05 1.107A.7.7 0 0 0 1 1.712v12.575a.7.7 0 0 0 1.05.607L12 9.149V14.3a.7.7 0 0 0 .7.7h1.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-1.6z"></path>
-                </svg>
+                <SkipForwardIcon size={20} className="md:w-6 md:h-6" />
               </button>
             </div>
-            <div className="flex items-center w-full mt-2">
-              <span className="text-xs text-gray-400 mr-2">
+            <div className="hidden md:flex items-center w-full mt-1 md:mt-2">
+              <span className="text-xs text-gray-400 mr-1 md:mr-2">
                 {formatTime(currentTime)}
               </span>
               <input
@@ -432,21 +527,25 @@ const Hero = () => {
                   }%, #4b5563 ${(currentTime / duration) * 100}%)`,
                 }}
               />
-              <span className="text-xs text-gray-400 ml-2">
+              <span className="text-xs text-gray-400 ml-1 md:ml-2">
                 {formatTime(duration)}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2 md:space-x-4">
             <button
               onClick={() => setShowQueue(!showQueue)}
               className="text-gray-400 hover:text-white"
             >
-              <List size={16} />
+              <List size={14} className="md:w-4 md:h-4" />
             </button>
             <button className="text-gray-400 hover:text-white">
-              {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              {volume === 0 ? (
+                <VolumeX size={14} className="md:w-4 md:h-4" />
+              ) : (
+                <Volume2 size={14} className="md:w-4 md:h-4" />
+              )}
             </button>
             <input
               type="range"
@@ -454,7 +553,7 @@ const Hero = () => {
               max="100"
               value={volume * 100}
               onChange={handleVolumeChange}
-              className="w-20 h-1 bg-gray-600 rounded-full appearance-none cursor-pointer"
+              className="w-16 md:w-20 h-1 bg-gray-600 rounded-full appearance-none cursor-pointer"
               style={{
                 background: `linear-gradient(to right, white ${
                   volume * 100
@@ -464,8 +563,8 @@ const Hero = () => {
           </div>
 
           {showQueue && songQueue.length > 0 && (
-            <div className="absolute bottom-20 right-4 bg-[#181818] rounded-lg shadow-lg p-4 w-1/3 h-[70vh] overflow-y-auto no-scrollbar">
-              <h3 className="text-sm font-semibold mb-2">Queue</h3>
+            <div className="absolute bottom-16 md:bottom-20 right-2 md:right-4 bg-[#181818] rounded-lg shadow-lg p-2 md:p-4 w-[90%] md:w-1/3 h-[50vh] md:h-[70vh] overflow-y-auto no-scrollbar">
+              <h3 className="text-xs md:text-sm font-semibold mb-2">Queue</h3>
               {songQueue.map((song, index) => (
                 <div
                   key={`${song.title}-${index}`}
@@ -476,9 +575,9 @@ const Hero = () => {
                   <Image
                     src={`/covers/${song.title}.${song.type}`}
                     alt={song.title}
-                    width={32}
-                    height={32}
-                    className="rounded"
+                    width={24}
+                    height={24}
+                    className="rounded md:w-8 md:h-8"
                   />
                   <div>
                     <p className="text-xs font-semibold">{song.title}</p>
@@ -492,6 +591,148 @@ const Hero = () => {
 
         <audio ref={audioRef} />
       </div>
+      {isSongOpen && isCurrentSong && (
+        <div className="fixed w-screen h-screen bottom-0 left-0 right-0 bg-[#181818] p-4 md:p-6 z-20">
+          <ChevronDown
+            size={24}
+            className="text-white cursor-pointer mb-4"
+            onClick={() => setIsSongOpen(false)}
+          />
+
+          <div className="flex mt-20 flex-col items-center space-x-4">
+            <div className="w-[35vw] aspect-square relative rounded-lg overflow-hidden">
+              <Image
+                src={`/covers/${isCurrentSong.title}.${isCurrentSong.type}`}
+                alt={isCurrentSong.title}
+                fill
+              />
+            </div>
+            <div className="text-center mt-4">
+              <p className="text-lg font-semibold">{isCurrentSong.title}</p>
+              <p className="text-md text-gray-400">{isCurrentSong.artist}</p>
+              <p className="text-sm text-gray-500">
+                {isCurrentSong.album} - {isCurrentSong.release_date}
+              </p>
+            </div>
+            <div className="w-[70vw] mx-auto flex items-center mt-12">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={(currentTime / duration) * 100 || 0}
+                onChange={handleProgressChange}
+                className="flex-1 h-1 bg-gray-600 rounded-full appearance-none caret-white cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, white ${
+                    (currentTime / duration) * 100
+                  }%, #4b5563 ${(currentTime / duration) * 100}%)`,
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between w-[70vw] mt-6">
+              <span className="text-xs text-gray-400 mr-1 md:mr-2">
+                {formatTime(currentTime)}
+              </span>
+              <span className="text-xs text-gray-400 ml-1 md:ml-2">
+                {formatTime(duration)}
+              </span>
+            </div>
+            <div className="flex flex-col mt-6 items-center w-full md:w-1/2">
+              <div className="w-[70vw] items-center flex justify-between space-x-4">
+                <div className="flex-1"></div>
+                <div className="flex flex-1 items-center space-x-4">
+                  <button
+                    onClick={playPreviousSong}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <SkipBack size={25} fill="white" className="border-white" />
+                  </button>
+                  <button
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="bg-white text-black rounded-full p-1 md:p-2"
+                  >
+                    {isPlaying ? (
+                      <Pause size={25} fill="black" className="md:w-6 md:h-6" />
+                    ) : (
+                      <Play size={25} fill="black" className="md:w-6 md:h-6" />
+                    )}
+                  </button>
+                  <button
+                    onClick={playNextSong}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <SkipForwardIcon
+                      size={25}
+                      fill="white"
+                      className="border-white"
+                    />
+                  </button>
+                </div>
+                <div className="flex-1 flex justify-end w-full">
+                  <Heart
+                    size={25}
+                    className="text-gray-400 hover:text-white"
+                    fill={
+                      likedSongs.includes(isCurrentSong.title) ? "red" : "none"
+                    }
+                    onClick={() => {
+                      let updatedLikedSongs;
+                      if (likedSongs.includes(isCurrentSong.title)) {
+                        updatedLikedSongs = likedSongs.filter(
+                          (song) => song !== isCurrentSong.title
+                        );
+                      } else {
+                        updatedLikedSongs = [
+                          ...likedSongs,
+                          isCurrentSong.title,
+                        ];
+                      }
+                      setLikedSongs(updatedLikedSongs);
+                      localStorage.setItem(
+                        "likedSongs",
+                        JSON.stringify(updatedLikedSongs)
+                      );
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="w-full mt-8 p-4 bg-[#282828] rounded-lg">
+              <h1 className="text-white text-lg font-bold mb-4">Up Next</h1>
+              <div className="space-y-2 overflow-y-auto h-[120px] no-scrollbar">
+                {songQueue.length > 0 ? (
+                  songQueue.map((song, index) => (
+                    <div
+                      key={`${song.title}-${index}`}
+                      onClick={() => handlePlaySong(song)}
+                      className="flex items-center gap-3 p-2 hover:bg-[#383838] rounded-md cursor-pointer transition-colors"
+                    >
+                      <span className="text-sm text-gray-400 w-6">
+                        {index + 1}.
+                      </span>
+                      <Image
+                        src={`/covers/${song.title}.${song.type}`}
+                        alt={song.title}
+                        width={40}
+                        height={40}
+                        className="rounded-md"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">{song.title}</p>
+                        <p className="text-xs text-gray-400">{song.artist}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-sm text-center">
+                    No songs in queue
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
