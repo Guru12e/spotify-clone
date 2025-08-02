@@ -102,11 +102,6 @@ const Hero = () => {
   };
 
   const playNextSong = () => {
-    if (isCurrentSong) {
-      handlePlaySong(isCurrentSong);
-      return;
-    }
-
     if (songQueue.length > 0) {
       const nextSong = songQueue[0];
       setSongQueue((prev) => prev.slice(1));
