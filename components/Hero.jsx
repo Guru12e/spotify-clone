@@ -296,9 +296,7 @@ const Hero = () => {
         <main className="flex-1 mt-2 flex flex-col md:flex-row overflow-x-auto no-scrollbar">
           <div className="h-auto md:h-full w-full py-5 md:w-1/5 bg-[#040404] flex flex-col">
             <div className="flex justify-between items-center px-4 md:px-6 py-2">
-              <h2 className="text-sm md:text-md font-semibold">
-                Your Favorites
-              </h2>
+              <h2 className="text-3xl font-bold">Your Favorites</h2>
             </div>
             {likedSongs.length > 0 ? (
               <div className="flex-1 overflow-y-auto no-scrollbar">
