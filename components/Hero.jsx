@@ -230,7 +230,10 @@ const Hero = () => {
                   {filteredSongs.map((song, index) => (
                     <div
                       key={index}
-                      onClick={() => handlePlaySong(song)}
+                      onClick={() => {
+                        handlePlaySong(song);
+                        clearSearch();
+                      }}
                       className="px-3 py-1 md:px-4 md:py-2 hover:bg-[#282828] cursor-pointer flex items-center gap-2 md:gap-4"
                     >
                       <div className="w-8 h-8 md:w-10 md:h-10 relative">
