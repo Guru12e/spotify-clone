@@ -11,7 +11,7 @@ const SongsCategory = ({ title, songs, handlePlaySong }) => {
           <div
             key={`${song.title}-${index}`}
             onClick={() => handlePlaySong(song)}
-            className="bg-[#181818] cursor-pointer group w-[180px] relative hover:bg-[#282828] rounded-lg flex-shrink-0"
+            className="bg-[#181818] cursor-pointer group w-[40vw] md:w-[180px] relative hover:bg-[#282828] rounded-lg flex-shrink-0"
           >
             <div className="relative w-full aspect-square mb-2">
               <Image

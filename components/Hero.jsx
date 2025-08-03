@@ -235,7 +235,7 @@ const Hero = () => {
                     >
                       <div className="w-8 h-8 md:w-10 md:h-10 relative">
                         <Image
-                          src={`/covers/${song.title}.jpg`}
+                          src={`/covers/${song.title}.${song.type}`}
                           alt={song.title}
                           fill
                           className="object-cover rounded-full"
@@ -312,7 +312,9 @@ const Hero = () => {
                   >
                     <div className="w-8 h-8 md:w-10 md:h-10 relative">
                       <Image
-                        src={`/covers/${song}.jpg`}
+                        src={`/covers/${song}.${
+                          songs.find((s) => s.title === song)?.type
+                        }`}
                         alt={song}
                         fill
                         className="object-cover rounded-full"
@@ -376,11 +378,11 @@ const Hero = () => {
         <footer className="bg-[#181818] border-t border-gray-800 p-2 md:p-4 flex flex-col md:flex-row items-center justify-between relative">
           <div className="flex md:hidden items-center py-2 w-full px-2 space-x-2 md:space-x-4 mb-2 md:mb-0">
             {isCurrentSong && !isSongOpen && (
-              <div
-                onClick={() => setIsSongOpen(!isSongOpen)}
-                className="flex w-full justify-between cursor-pointer"
-              >
-                <div className="flex items-center space-x-2">
+              <div className="flex w-full justify-between cursor-pointer">
+                <div
+                  onClick={() => setIsSongOpen(!isSongOpen)}
+                  className="flex-1 py-2 flex items-center space-x-2"
+                >
                   <Image
                     src={`/covers/${isCurrentSong.title}.${isCurrentSong.type}`}
                     alt="Now Playing"
@@ -591,14 +593,14 @@ const Hero = () => {
         <audio ref={audioRef} />
       </div>
       {isSongOpen && isCurrentSong && (
-        <div className="fixed w-screen h-screen bottom-0 flex flex-col justify-end left-0 right-0 bg-[#181818] p-4 md:p-6 z-20">
+        <div className="fixed w-screen h-[90vh] bottom-0 flex md:hidden flex-col justify-between left-0 right-0 bg-[#181818] p-4 md:p-6 z-20">
           <ChevronDown
             size={35}
-            className="text-white cursor-pointer mb-5 bg-white/40 rounded-full p-1"
+            className="text-white cursor-pointer bg-white/40 rounded-full p-1"
             onClick={() => setIsSongOpen(false)}
           />
 
-          <div className="flex flex-col justify-center h-max">
+          <div className="flex flex-col justify-center">
             <div className="flex flex-col items-center space-x-4">
               <div className="w-[35vw] mx-auto aspect-square relative rounded-lg overflow-hidden">
                 <Image
@@ -629,7 +631,7 @@ const Hero = () => {
                   }}
                 />
               </div>
-              <div className="flex items-center justify-between w-[70vw] mt-6">
+              <div className="flex items-center justify-between mx-auto w-[70vw] mt-6">
                 <span className="text-xs text-gray-400 mr-1 md:mr-2">
                   {formatTime(currentTime)}
                 </span>
@@ -637,7 +639,7 @@ const Hero = () => {
                   {formatTime(duration)}
                 </span>
               </div>
-              <div className="flex justify-center flex-col mt-6 items-center w-full md:w-1/2">
+              <div className="flex justify-center flex-col mt-6 items-center w-[70vw] mx-auto">
                 <div className="w-[70vw] items-center flex justify-between space-x-4">
                   <div className="flex-1"></div>
                   <div className="flex flex-1 items-center space-x-4">
@@ -712,38 +714,38 @@ const Hero = () => {
                 </div>
               </div>
             </div>
-            <div className="w-full h-max mt-8 p-4 bg-[#282828] rounded-lg">
-              <h1 className="text-white text-lg font-bold mb-4">Up Next</h1>
-              <div className="space-y-2 overflow-y-auto h-[120px] no-scrollbar">
-                {songQueue.length > 0 ? (
-                  songQueue.map((song, index) => (
-                    <div
-                      key={`${song.title}-${index}`}
-                      onClick={() => handlePlaySong(song)}
-                      className="flex items-center gap-3 p-2 hover:bg-[#383838] rounded-md cursor-pointer transition-colors"
-                    >
-                      <span className="text-sm text-gray-400 w-6">
-                        {index + 1}.
-                      </span>
-                      <Image
-                        src={`/covers/${song.title}.${song.type}`}
-                        alt={song.title}
-                        width={40}
-                        height={40}
-                        className="rounded-md"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold">{song.title}</p>
-                        <p className="text-xs text-gray-400">{song.artist}</p>
-                      </div>
+          </div>
+          <div className="w-full h-max mt-8 p-4 bg-[#282828] rounded-lg">
+            <h1 className="text-white text-lg font-bold mb-4">Up Next</h1>
+            <div className="space-y-2 overflow-y-auto h-[120px] no-scrollbar">
+              {songQueue.length > 0 ? (
+                songQueue.map((song, index) => (
+                  <div
+                    key={`${song.title}-${index}`}
+                    onClick={() => handlePlaySong(song)}
+                    className="flex items-center gap-3 p-2 hover:bg-[#383838] rounded-md cursor-pointer transition-colors"
+                  >
+                    <span className="text-sm text-gray-400 w-6">
+                      {index + 1}.
+                    </span>
+                    <Image
+                      src={`/covers/${song.title}.${song.type}`}
+                      alt={song.title}
+                      width={40}
+                      height={40}
+                      className="rounded-md"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">{song.title}</p>
+                      <p className="text-xs text-gray-400">{song.artist}</p>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm text-center">
-                    No songs in queue
-                  </p>
-                )}
-              </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm text-center">
+                  No songs in queue
+                </p>
+              )}
             </div>
           </div>
         </div>
