@@ -226,7 +226,7 @@ const Hero = () => {
                 </button>
               )}
               {filteredSongs.length > 0 && (
-                <div className="absolute left-0 top-full mt-2 w-full bg-[#181818] rounded-lg shadow-lg max-h-48 md:max-h-60 overflow-y-auto no-scrollbar">
+                <div className="absolute top-full mt-2 md:w-full bg-[#181818] hidden md:block rounded-lg shadow-lg max-h-48 md:max-h-60 overflow-y-auto no-scrollbar">
                   {filteredSongs.map((song, index) => (
                     <div
                       key={index}
@@ -256,6 +256,38 @@ const Hero = () => {
                 </div>
               )}
             </div>
+            {filteredSongs.length > 0 && (
+              <div className="absolute md:hidden top-full mt-2 w-screen md:w-full py-3 bg-[#181818] rounded-lg shadow-lg max-h-[50vh] overflow-y-auto flex flex-col items-center no-scrollbar">
+                <div className="flex-1 w-full">
+                  {filteredSongs.map((song, index) => (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        handlePlaySong(song);
+                        clearSearch();
+                      }}
+                      className="px-3 py-1 w-full md:px-4 md:py-2 hover:bg-[#282828] cursor-pointer flex items-center gap-2 md:gap-4"
+                    >
+                      <div className="w-8 h-8 md:w-10 md:h-10 relative">
+                        <Image
+                          src={`/covers/${song.title}.${song.type}`}
+                          alt={song.title}
+                          fill
+                          className="object-cover rounded-full"
+                          sizes="(max-width: 768px) 32px, 40px"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs md:text-sm font-semibold">
+                          {song.title}
+                        </p>
+                        <p className="text-xs text-gray-400">{song.artist}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-2 md:space-x-4">
             <button className="bg-black/50 hidden md:block rounded-full px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-semibold">
