@@ -14,12 +14,13 @@ import {
   ChevronDown,
   SkipBack,
   SkipForwardIcon,
-  Repeat,
-  Repeat1,
+  Trash,
+  SendHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { trendingNew, englishSongs, madeForYou } from "@/constant/constant";
+import { Mic, MicOff } from "lucide-react";
 import SongsCategory from "./SongsCategory";
 
 const Hero = () => {
@@ -35,11 +36,16 @@ const Hero = () => {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [songQueue, setSongQueue] = useState([]);
+  const [aiPlaylists, setAiPlaylists] = useState([]);
+  const [loadingAI, setLoadingAI] = useState(false);
   const [playedSongs, setPlayedSongs] = useState([]);
+  const [aiPrompt, setAiPrompt] = useState("");
   const [showQueue, setShowQueue] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const songs = [...trendingNew, ...madeForYou, ...englishSongs];
   const [filteredSongs, setFilteredSongs] = useState([]);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     const likedSongs = localStorage.getItem("likedSongs");
@@ -47,6 +53,11 @@ const Hero = () => {
       const parsedSongs = JSON.parse(likedSongs);
       setLikedSongs(parsedSongs);
     }
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("aiPlaylists");
+    if (saved) setAiPlaylists(JSON.parse(saved));
   }, []);
 
   useEffect(() => {
@@ -78,6 +89,32 @@ const Hero = () => {
       };
     }
   }, [isCurrentSong]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+        recognition.onstart = () => setListening(true);
+        recognition.onend = () => setListening(false);
+
+        recognition.onresult = (event) => {
+          const text = event.results[0][0].transcript;
+          console.log("VOICE:", text);
+          setAiPrompt(text);
+          generateAIPlaylist(text);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, []);
 
   const handlePlaySong = (song) => {
     if (!session?.user?.email) {
@@ -122,7 +159,7 @@ const Hero = () => {
     if (!isCurrentSong) return;
 
     const currentIndex = songs.findIndex(
-      (s) => s.title === isCurrentSong.title
+      (s) => s.title === isCurrentSong.title,
     );
     const previousIndex = (currentIndex - 1 + songs.length) % songs.length;
     const previousSong = songs[previousIndex];
@@ -150,6 +187,53 @@ const Hero = () => {
     setVolume(newVolume);
   };
 
+  const generateAIPlaylist = async (input = aiPrompt) => {
+    const prompt = input.trim();
+    if (!prompt) return;
+
+    setLoadingAI(true);
+
+    setLoadingAI(true);
+
+    const res = await fetch("/api/ai-playlist", {
+      method: "POST",
+      body: JSON.stringify({ prompt: aiPrompt }),
+    });
+
+    const songTitles = await res.json();
+
+    const playlistSongs = songs.filter((s) => songTitles.includes(s.title));
+
+    if (playlistSongs.length === 0) {
+      setLoadingAI(false);
+      return;
+    }
+
+    const newPlaylist = {
+      id: "ai_" + Date.now(),
+      name: `AI Mix – ${aiPrompt}`,
+      songs: playlistSongs,
+    };
+
+    let aiPlayListsSongs = [];
+
+    aiPlayListsSongs.push(
+      playlistSongs.map((s) => {
+        return songs.find((song) => song.title === s.title);
+      }),
+    );
+
+    const updatedPlaylists = [...aiPlaylists, newPlaylist];
+    setAiPlaylists(updatedPlaylists);
+    localStorage.setItem("aiPlaylists", JSON.stringify(aiPlayListsSongs));
+
+    setSongQueue(newPlaylist.songs.slice(1));
+    handlePlaySong(newPlaylist.songs[0]);
+
+    setAiPrompt("");
+    setLoadingAI(false);
+  };
+
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -160,7 +244,7 @@ const Hero = () => {
       const filtered = songs.filter(
         (song) =>
           song.title.toLowerCase().includes(query.toLowerCase()) ||
-          song.artist.toLowerCase().includes(query.toLowerCase())
+          song.artist.toLowerCase().includes(query.toLowerCase()),
       );
       setFilteredSongs(filtered);
     }
@@ -188,13 +272,7 @@ const Hero = () => {
               />
             </div>
           </div>
-          <div className="flex-1 flex items-center gap-2 md:gap-4 justify-center w-full">
-            <Link
-              href="/"
-              className="text-white hidden md:block bg-[#1a1a1a]/80 p-2 md:p-3 rounded-full hover:text-white font-semibold"
-            >
-              <Home size={20} className="md:w-6 md:h-6" />
-            </Link>
+          <div className="flex-1 flex flex-col items-center gap-2 md:gap-4 justify-center w-full">
             <div className="relative w-full md:max-w-[24rem]">
               <input
                 type="text"
@@ -326,6 +404,48 @@ const Hero = () => {
               </button>
             )}
           </div>
+          <div className="relative w-full md:max-w-md group">
+            <div
+              className="flex items-center gap-2 bg-[#1a1a1a] px-4 py-3 rounded-xl border border-white/10 shadow-lg 
+                  focus-within:border-green-500 transition-all duration-300"
+            >
+              <Search size={18} className="text-gray-400" />
+
+              <input
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Tell AI what type of playlist you want..."
+                className="bg-transparent flex-1 outline-none text-sm text-white placeholder-gray-500"
+              />
+
+              {!loadingAI ? (
+                <button
+                  onClick={
+                    aiPrompt.trim() !== ""
+                      ? () => generateAIPlaylist()
+                      : () => {
+                          if (!recognitionRef.current)
+                            return alert("Voice not supported");
+                          listening
+                            ? recognitionRef.current.stop()
+                            : recognitionRef.current.start();
+                        }
+                  }
+                  className="bg-green-500 hover:bg-green-400 text-black px-4 py-1 rounded-lg text-sm font-semibold"
+                >
+                  {aiPrompt.trim() !== "" ? (
+                    <SendHorizontal size={18} />
+                  ) : listening ? (
+                    <Mic size={18} className="text-black" />
+                  ) : (
+                    <MicOff size={18} className="text-black" />
+                  )}
+                </button>
+              ) : (
+                <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+              )}
+            </div>
+          </div>
         </header>
 
         <main className="flex-1 mt-2 flex flex-col md:flex-row overflow-x-auto no-scrollbar">
@@ -376,7 +496,7 @@ const Hero = () => {
                         }
                         localStorage.setItem(
                           "likedSongs",
-                          JSON.stringify(likedSongs)
+                          JSON.stringify(likedSongs),
                         );
                       }}
                     />
@@ -388,6 +508,42 @@ const Hero = () => {
                 <p className="text-gray-400 text-sm">No favorite songs found</p>
               </div>
             )}
+            <div className="px-6 mt-4">
+              <h3 className="text-xl font-bold mb-2">AI Playlists</h3>
+
+              {aiPlaylists.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    setSongQueue(p.songs.slice(1));
+                    handlePlaySong(p.songs[0]);
+                  }}
+                  className="cursor-pointer flex gap-2 items-center bg-[#111] hover:bg-[#222] p-3 rounded-lg mb-2"
+                >
+                  <div>
+                    <p className="font-semibold">{p.name}</p>
+                    <p className="text-xs text-gray-400">
+                      {p.songs?.length} songs
+                    </p>
+                  </div>
+                  <Trash
+                    size={16}
+                    className="text-gray-400 w-5 h-5 hover:text-white ml-auto"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const updatedPlaylists = aiPlaylists.filter(
+                        (playlist) => playlist.id !== p.id,
+                      );
+                      setAiPlaylists(updatedPlaylists);
+                      localStorage.setItem(
+                        "aiPlaylists",
+                        JSON.stringify(updatedPlaylists),
+                      );
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
           <div className="p-4 md:p-6 w-full md:w-4/5 rounded-xl bg-gradient-to-b from-[#2a2a2a] to-[#121212]">
             <SongsCategory
@@ -443,7 +599,7 @@ const Hero = () => {
                       let updatedLikedSongs;
                       if (likedSongs.includes(isCurrentSong.title)) {
                         updatedLikedSongs = likedSongs.filter(
-                          (song) => song !== isCurrentSong.title
+                          (song) => song !== isCurrentSong.title,
                         );
                       } else {
                         updatedLikedSongs = [
@@ -454,7 +610,7 @@ const Hero = () => {
                       setLikedSongs(updatedLikedSongs);
                       localStorage.setItem(
                         "likedSongs",
-                        JSON.stringify(updatedLikedSongs)
+                        JSON.stringify(updatedLikedSongs),
                       );
                     }}
                   />
@@ -503,7 +659,7 @@ const Hero = () => {
                     let updatedLikedSongs;
                     if (likedSongs.includes(isCurrentSong.title)) {
                       updatedLikedSongs = likedSongs.filter(
-                        (song) => song !== isCurrentSong.title
+                        (song) => song !== isCurrentSong.title,
                       );
                     } else {
                       updatedLikedSongs = [...likedSongs, isCurrentSong.title];
@@ -511,7 +667,7 @@ const Hero = () => {
                     setLikedSongs(updatedLikedSongs);
                     localStorage.setItem(
                       "likedSongs",
-                      JSON.stringify(updatedLikedSongs)
+                      JSON.stringify(updatedLikedSongs),
                     );
                   }}
                 />
@@ -599,7 +755,7 @@ const Hero = () => {
           {showQueue && songQueue.length > 0 && (
             <div className="absolute bottom-16 md:bottom-20 right-2 md:right-4 bg-[#181818] rounded-lg shadow-lg p-2 md:p-4 w-[90%] md:w-1/3 h-[50vh] md:h-[70vh] overflow-y-auto no-scrollbar">
               <h3 className="text-xs md:text-sm font-semibold mb-2">Queue</h3>
-              {songQueue.map((song, index) => (
+              {aiPlaylists.concat(songQueue).map((song, index) => (
                 <div
                   key={`${song.title}-${index}`}
                   className="flex items-center gap-2 py-1 hover:bg-[#282828] cursor-pointer"
@@ -728,7 +884,7 @@ const Hero = () => {
                         let updatedLikedSongs;
                         if (likedSongs.includes(isCurrentSong.title)) {
                           updatedLikedSongs = likedSongs.filter(
-                            (song) => song !== isCurrentSong.title
+                            (song) => song !== isCurrentSong.title,
                           );
                         } else {
                           updatedLikedSongs = [
@@ -739,7 +895,7 @@ const Hero = () => {
                         setLikedSongs(updatedLikedSongs);
                         localStorage.setItem(
                           "likedSongs",
-                          JSON.stringify(updatedLikedSongs)
+                          JSON.stringify(updatedLikedSongs),
                         );
                       }}
                     />
