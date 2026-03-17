@@ -117,10 +117,6 @@ const Hero = () => {
   }, []);
 
   const handlePlaySong = (song) => {
-    if (!session?.user?.email) {
-      signIn();
-    }
-
     if (audioRef.current) {
       const songPath = `/songs/${song.title}.mp3`;
       setIsCurrentSong(song);
@@ -190,8 +186,6 @@ const Hero = () => {
   const generateAIPlaylist = async (input = aiPrompt) => {
     const prompt = input.trim();
     if (!prompt) return;
-
-    setLoadingAI(true);
 
     setLoadingAI(true);
 
