@@ -17,7 +17,6 @@ import {
   Trash,
   SendHorizontal,
 } from "lucide-react";
-import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { trendingNew, englishSongs, madeForYou } from "@/constant/constant";
 import { Mic, MicOff } from "lucide-react";
@@ -191,7 +190,7 @@ const Hero = () => {
 
     const res = await fetch("/api/ai-playlist", {
       method: "POST",
-      body: JSON.stringify({ prompt: aiPrompt }),
+      body: JSON.stringify({ prompt }),
     });
 
     const songTitles = await res.json();
@@ -205,7 +204,7 @@ const Hero = () => {
 
     const newPlaylist = {
       id: "ai_" + Date.now(),
-      name: `AI Mix – ${aiPrompt}`,
+      name: `AI Mix – ${prompt}`,
       songs: playlistSongs,
     };
 
